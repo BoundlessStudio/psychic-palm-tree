@@ -8,7 +8,28 @@ import { cn } from '@/lib/utils';
 
 export function ThemeToggle({ className }: { className?: string }) {
   const { resolvedTheme, setTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = mounted && resolvedTheme === 'dark';
+
+  if (!mounted) {
+    return (
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className={cn('h-9 w-9', className)}
+        aria-label="Toggle theme"
+      >
+        <Sun className="h-5 w-5" />
+        <span className="sr-only">Toggle theme</span>
+      </Button>
+    );
+  }
 
   return (
     <Button

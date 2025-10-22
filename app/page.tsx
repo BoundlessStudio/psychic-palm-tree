@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { useChat } from 'ai/react';
+import type { Message } from 'ai';
 import { Sparkles } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,7 +20,19 @@ export default function ChatPage() {
 
   const sendPrompt = React.useCallback(() => {
     if (!input.trim()) return;
-    append({ role: 'user', content: input });
+    const userMessage: Message = {
+      id: crypto.randomUUID(),
+      role: 'user',
+      content: input,
+      parts: [
+        {
+          type: 'text',
+          payload: { text: input },
+        },
+      ],
+    };
+
+    append(userMessage);
     setInput('');
   }, [append, input, setInput]);
 
@@ -58,7 +71,13 @@ export default function ChatPage() {
                     id: crypto.randomUUID(),
                     role: 'system',
                     content: 'You are a helpful assistant.',
-                  },
+                    parts: [
+                      {
+                        type: 'text',
+                        payload: { text: 'You are a helpful assistant.' },
+                      },
+                    ],
+                  } satisfies Message,
                 ])
               }
             >

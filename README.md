@@ -42,7 +42,7 @@ visual system. Tailwind CSS powers the design tokens, while Radix primitives kee
 
 ## Project Structure
 
-```
+```text
 app/
   api/chat/route.ts      # Edge runtime handler streaming OpenAI responses
   layout.tsx             # Theme provider + global fonts

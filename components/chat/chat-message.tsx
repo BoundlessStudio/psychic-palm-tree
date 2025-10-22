@@ -3,8 +3,59 @@ import type { Message } from 'ai';
 import { cn } from '@/lib/utils';
 import { Bot, User } from 'lucide-react';
 
+function extractTextFromMessage(message: Message): string {
+  const candidateParts = (message as any).parts as
+    | Array<
+        | string
+        | {
+            type?: string;
+            text?: string;
+            payload?: unknown;
+          }
+        | { text?: string }
+      >
+    | undefined;
+
+  if (candidateParts && Array.isArray(candidateParts) && candidateParts.length > 0) {
+    return candidateParts
+      .map((part) => {
+        if (!part) return '';
+        if (typeof part === 'string') return part;
+        if (typeof (part as any).text === 'string') return (part as any).text;
+
+        const payload = (part as any).payload;
+        if (typeof payload === 'string') return payload;
+        if (payload && typeof (payload as any).text === 'string') return (payload as any).text;
+        if (payload && typeof (payload as any).content === 'string') return (payload as any).content;
+
+        return '';
+      })
+      .filter(Boolean)
+      .join('\n');
+  }
+
+  if (typeof message.content === 'string') {
+    return message.content;
+  }
+
+  if (Array.isArray(message.content)) {
+    return message.content
+      .map((part) => {
+        if (!part) return '';
+        if (typeof part === 'string') return part;
+        if ('text' in part && typeof part.text === 'string') return part.text;
+        return '';
+      })
+      .filter(Boolean)
+      .join('\n');
+  }
+
+  return '';
+}
+
 export function ChatMessage({ message }: { message: Message }) {
   const isUser = message.role === 'user';
+  const text = React.useMemo(() => extractTextFromMessage(message), [message]);
   return (
     <div className={cn('flex gap-3 rounded-lg px-4 py-3 transition-colors', isUser ? 'justify-end bg-primary/5' : 'bg-muted')}
     >
@@ -22,20 +73,9 @@ export function ChatMessage({ message }: { message: Message }) {
             {isUser ? 'You' : message.role === 'assistant' ? 'Assistant' : 'System'}
           </p>
           <div className="whitespace-pre-wrap text-foreground">
-            {(() => {
-              const content =
-                typeof message.content === 'string'
-                  ? message.content
-                  : message.content
-                      .map((part) => {
-                        if (typeof part === 'string') return part;
-                        if ('text' in part) return part.text;
-                        return '';
-                      })
-                      .join('\n');
-
-              return content.split('\n').map((line, index) => <p key={index}>{line}</p>);
-            })()}
+            {text.split('\n').map((line, index) => (
+              <p key={index}>{line}</p>
+            ))}
           </div>
         </div>
       </div>
